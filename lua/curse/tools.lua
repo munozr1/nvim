@@ -3,14 +3,18 @@ local M = {}
 
 function M:call(t, id)
 	local tool = t.name
+	if not t.arguments then
+		error("call => no arguments found")
+	end
 	local params = t.arguments --cjson.decode(t.arguments)
 	if self[tool] == nil then
 		error("No tool found: "..tool)
 	end
-	local res, err = self[tool](params)
 
+	--exec the tool
+	local res, err = self[tool](self, params)
 	if not res then
-		error(err)
+		error("call => "..err)
 	end
 
 	if type(res) ~= "string" then
@@ -30,15 +34,15 @@ function M:call(t, id)
 	return res
 end
 
-M["append_message"] = function(self, t)
-	local msg_history = self["read_file"]("messages.txt", true)
+function M:append_message(t)
+	local msg_history = self:read_file("messages.txt", true)
 	local json = cjson.decode(msg_history)
 	table.insert(json, t)
 	msg_history = cjson.encode(json)
-	self["write_file"]("messages.txt", msg_history)
+	self:write_file("messages.txt", msg_history)
 end
 
-M["list_dir"] = function (params)
+function M:list_dir(params)
 	local cmd = "ls "..params.relative_workspace_path
 	local handle, err = io.popen(cmd)
 	if not handle then
@@ -93,7 +97,7 @@ M["file_search"] = function (params)
 end
 
 
-M["read_file"] = function(params, dev)
+function M:read_file(params, dev)
     local filename
     if not dev then
     	filename = params.relative_workspace_path
@@ -130,7 +134,7 @@ M["read_file"] = function(params, dev)
 end
 
 
-M["write_file"] = function(filename, data)
+function M:write_file (filename, data)
     local file, err = io.open(filename, "w")
     if not file then
         return nil, "Could not open file: " .. err
@@ -143,7 +147,31 @@ M["write_file"] = function(filename, data)
     return true, nil
 end
 
+local function update_filename(path)
+    return path:gsub("([^/]+)%.([^%.]+)$", "updated_%1.%2")
+end
 
+function M:edit_file(params)
+    print("edit_file => params:", cjson.encode(params)) -- added debug line
+
+    if type(params) ~= "table" then
+        return nil, "edit_file expected params as table but got "..type(params)
+    end
+
+    if not params.target_file then
+        return nil, "target_file is missing"
+    end
+
+    print("Editing file:", params.target_file)
+    local filename = update_filename(params.target_file)
+
+    local res, err = M:write_file(filename, params.code_edit)
+    if not res then
+        return nil, "Failed to write file: " .. (err or "Unknown error")
+    end
+
+    return "success", nil
+end
 
 
 

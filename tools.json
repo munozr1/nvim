@@ -1,43 +1,34 @@
 {
   "functions": [
     {
-      "description": "Find snippets of code from the codebase most relevant to the search query. This is a semantic search tool, so the query should ask for something semantically matching what is needed. If it makes sense to only search in particular directories, please specify them in the target_directories field. Unless there is a clear reason to use your own search query, please just reuse the user's exact query with their wording. Their exact wording/phrasing can often be helpful for the semantic search query. Keeping the same exact question format can also be helpful.",
       "name": "codebase_search",
+      "description": "Find snippets of code from the codebase most relevant to the search query. This is a semantic search tool, so the query should ask for something semantically matching what is needed. If it makes sense to only search in particular directories, please specify them in the target_directories field. Unless there is a clear reason to use your own search query, please just reuse the user's exact query with their wording. Their exact wording/phrasing can often be helpful for the semantic search query. Keeping the same exact question format can also be helpful.",
       "parameters": {
+        "type": "object",
         "properties": {
-          "explanation": {
-            "description": "One sentence explanation as to why this tool is being used, and how it contributes to the goal.",
-            "type": "string"
-          },
           "query": {
-            "description": "The search query to find relevant code. You should reuse the user's exact query/most recent message with their wording unless there is a clear reason not to.",
+            "description": "The search query to find relevant code. Always regenerate the entire file with the recommended fixes instead of making small inline edits.",
             "type": "string"
           },
           "target_directories": {
             "description": "Glob patterns for directories to search over",
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          }
-        },
-        "required": ["query"],
-        "type": "object"
-      }
-    },
-    {
-      "description": "Read the contents of a file. The output of this tool call will be the 1-indexed file contents from start_line_one_indexed to end_line_one_indexed_inclusive, together with a summary of the lines outside the start and end range. Note that this call can view at most 250 lines at a time. Ensure you have the complete context when using this tool.",
-      "name": "read_file",
-      "parameters": {
-        "properties": {
-          "end_line_one_indexed_inclusive": {
-            "description": "The one-indexed line number to end reading at (inclusive).",
-            "type": "integer"
+            "type": "array",
+            "items": { "type": "string" }
           },
           "explanation": {
             "description": "One sentence explanation as to why this tool is being used, and how it contributes to the goal.",
             "type": "string"
-          },
+          }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "read_file",
+      "description": "Read the contents of a file. The output of this tool call will be the 1-indexed file contents from start_line_one_indexed to end_line_one_indexed_inclusive, together with a summary of the lines outside start_line_one_indexed and end_line_one_indexed_inclusive. Note that this call can view at most 250 lines at a time.",
+      "parameters": {
+        "type": "object",
+        "properties": {
           "relative_workspace_path": {
             "description": "The path of the file to read, relative to the workspace root.",
             "type": "string"
@@ -49,196 +40,135 @@
           "start_line_one_indexed": {
             "description": "The one-indexed line number to start reading from (inclusive).",
             "type": "integer"
+          },
+          "end_line_one_indexed_inclusive": {
+            "description": "The one-indexed line number to end reading at (inclusive).",
+            "type": "integer"
+          },
+          "explanation": {
+            "description": "One sentence explanation as to why this tool is being used, and how it contributes to the goal.",
+            "type": "string"
           }
         },
-        "required": ["relative_workspace_path", "should_read_entire_file", "start_line_one_indexed", "end_line_one_indexed_inclusive"],
-        "type": "object"
+        "required": ["relative_workspace_path", "should_read_entire_file", "start_line_one_indexed", "end_line_one_indexed_inclusive"]
       }
     },
     {
-      "description": "Propose a command to run on behalf of the user. The user must approve the command before execution. The user may reject or modify the command before approval.",
       "name": "run_terminal_cmd",
+      "description": "Propose a command to run on behalf of the user. The command will not be executed until the user approves it.",
       "parameters": {
+        "type": "object",
         "properties": {
           "command": {
-            "description": "The terminal command to execute",
-            "type": "string"
-          },
-          "explanation": {
-            "description": "One sentence explanation as to why this command needs to be run and how it contributes to the goal.",
+            "description": "The terminal command to execute.",
             "type": "string"
           },
           "is_background": {
-            "description": "Whether the command should be run in the background",
+            "description": "Whether the command should be run in the background.",
             "type": "boolean"
           },
           "require_user_approval": {
             "description": "Whether the user must approve the command before it is executed.",
             "type": "boolean"
+          },
+          "explanation": {
+            "description": "One sentence explanation as to why this command needs to be run and how it contributes to the goal.",
+            "type": "string"
           }
         },
-        "required": ["command", "is_background", "require_user_approval"],
-        "type": "object"
+        "required": ["command", "is_background", "require_user_approval"]
       }
     },
     {
-      "description": "List the contents of a directory. Useful for exploring the file structure before diving deeper into specific files.",
       "name": "list_dir",
+      "description": "List the contents of a directory to explore the codebase.",
       "parameters": {
+        "type": "object",
         "properties": {
-          "explanation": {
-            "description": "One sentence explanation as to why this tool is being used, and how it contributes to the goal.",
-            "type": "string"
-          },
           "relative_workspace_path": {
             "description": "Path to list contents of, relative to the workspace root.",
             "type": "string"
+          },
+          "explanation": {
+            "description": "One sentence explanation as to why this tool is being used, and how it contributes to the goal.",
+            "type": "string"
           }
         },
-        "required": ["relative_workspace_path"],
-        "type": "object"
+        "required": ["relative_workspace_path"]
       }
     },
     {
-      "description": "Fast text-based regex search that finds exact pattern matches within files or directories, utilizing the ripgrep command for efficient searching.",
       "name": "grep_search",
+      "description": "Fast text-based regex search for exact pattern matches within files or directories.",
       "parameters": {
+        "type": "object",
         "properties": {
+          "query": {
+            "description": "The regex pattern to search for.",
+            "type": "string"
+          },
           "case_sensitive": {
-            "description": "Whether the search should be case sensitive",
+            "description": "Whether the search should be case sensitive.",
             "type": "boolean"
           },
+          "include_pattern": {
+            "description": "Glob pattern for files to include (e.g. '*.ts' for TypeScript files).",
+            "type": "string"
+          },
           "exclude_pattern": {
-            "description": "Glob pattern for files to exclude",
+            "description": "Glob pattern for files to exclude.",
             "type": "string"
           },
           "explanation": {
             "description": "One sentence explanation as to why this tool is being used, and how it contributes to the goal.",
             "type": "string"
-          },
-          "include_pattern": {
-            "description": "Glob pattern for files to include (e.g. '*.ts' for TypeScript files)",
-            "type": "string"
-          },
-          "query": {
-            "description": "The regex pattern to search for",
-            "type": "string"
           }
         },
-        "required": ["query"],
-        "type": "object"
+        "required": ["query"]
       }
     },
     {
-      "description": "Use this tool to propose an edit to an existing file. Specify each edit in sequence with a comment marking unchanged code.",
       "name": "edit_file",
+      "description": "Propose an edit to an existing file. Always regenerate the entire file with the proposed changes instead of making small inline edits.",
       "parameters": {
+        "type": "object",
         "properties": {
-          "blocking": {
-            "description": "Whether this tool call should block the client from making further edits to the file until this call is complete.",
-            "type": "boolean"
-          },
-          "code_edit": {
-            "description": "Specify ONLY the precise lines of code that you wish to edit.",
+          "target_file": {
+            "description": "The target file to modify. Always specify the target file as the first argument and use the relative path in the workspace of the file to edit.",
             "type": "string"
           },
           "instructions": {
-            "description": "A single sentence instruction describing what you are going to do for the edit.",
+            "description": "A single sentence instruction describing what you are going to do for the sketched edit.",
             "type": "string"
           },
-          "target_file": {
-            "description": "The target file to modify. Always specify the target file as the first argument.",
+          "code_edit": {
+            "description": "You must first know the entire contents of the file you wish to propose an edit to. Specify the entire new file. Write out unchanged code also.",
             "type": "string"
+          },
+          "blocking": {
+            "description": "Whether this tool call should block the client from making further edits to the file until this call is complete.",
+            "type": "boolean"
           }
         },
-        "required": ["target_file", "instructions", "code_edit", "blocking"],
-        "type": "object"
+        "required": ["target_file", "instructions", "code_edit", "blocking"]
       }
     },
     {
-      "description": "Fast file search based on fuzzy matching against file paths. Use if you know part of the file path but don't know where it's located exactly.",
-      "name": "file_search",
-      "parameters": {
-        "properties": {
-          "explanation": {
-            "description": "One sentence explanation as to why this tool is being used, and how it contributes to the goal.",
-            "type": "string"
-          },
-          "query": {
-            "description": "Fuzzy filename to search for",
-            "type": "string"
-          }
-        },
-        "required": ["query", "explanation"],
-        "type": "object"
-      }
-    },
-    {
-      "description": "Deletes a file at the specified path. The operation will fail gracefully if the file doesn't exist or cannot be deleted.",
       "name": "delete_file",
+      "description": "Deletes a file at the specified path.",
       "parameters": {
+        "type": "object",
         "properties": {
-          "explanation": {
-            "description": "One sentence explanation as to why this tool is being used, and how it contributes to the goal.",
-            "type": "string"
-          },
           "target_file": {
             "description": "The path of the file to delete, relative to the workspace root.",
             "type": "string"
-          }
-        },
-        "required": ["target_file"],
-        "type": "object"
-      }
-    },
-    {
-      "description": "Calls a smarter model to apply the last edit to the specified file if the diff from the previous edit is not what was expected.",
-      "name": "reapply",
-      "parameters": {
-        "properties": {
-          "target_file": {
-            "description": "The relative path to the file to reapply the last edit to.",
-            "type": "string"
-          }
-        },
-        "required": ["target_file"],
-        "type": "object"
-      }
-    },
-    {
-      "description": "When there are multiple locations that can be edited in parallel, use this tool to sketch out a plan for the edits.",
-      "name": "parallel_apply",
-      "parameters": {
-        "properties": {
-          "edit_plan": {
-            "description": "A detailed description of the parallel edits to be applied.",
-            "type": "string"
           },
-          "edit_regions": {
-            "items": {
-              "description": "The region of the file that should be edited. It should include the minimum contents needed to read in addition to the edit plan.",
-              "properties": {
-                "end_line": {
-                  "description": "The end line of the region to edit. 1-indexed and inclusive.",
-                  "type": "integer"
-                },
-                "relative_workspace_path": {
-                  "description": "The path to the file to edit.",
-                  "type": "string"
-                },
-                "start_line": {
-                  "description": "The start line of the region to edit. 1-indexed and inclusive.",
-                  "type": "integer"
-                }
-              },
-              "required": ["relative_workspace_path"],
-              "type": "object"
-            },
-            "type": "array"
+          "explanation": {
+            "description": "One sentence explanation as to why this tool is being used, and how it contributes to the goal.",
+            "type": "string"
           }
         },
-        "required": ["edit_plan", "edit_regions"],
-        "type": "object"
+        "required": ["target_file"]
       }
     }
   ]

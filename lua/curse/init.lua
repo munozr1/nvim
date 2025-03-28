@@ -2,10 +2,6 @@ local cjson = require "cjson"
 local tools = require "curse.tools"
 local M = {}
 
-function M.hello()
-	print("Hello from curse")
-end
-
 function M.addContext()
 	local width = 40
 	local height = 10
@@ -40,22 +36,24 @@ function M.addContext()
 end
 
 local function handle_response_callback(res, err)
+
     if res == nil then
-	tools["write_file"]("err.txt", err)
+	tools:write_file("err.txt", err)
         print("handle_response_callback Error => " .. err)
         return
     end
 
-    if res.error_msg then
-        print("LLM ERR: " .. res.error_msg)
+    if res.error_msg or res.error then
+        print("LLM ERR: " .. (res.error_msg or res.error.message))
         return
     end
+
 
     local choices = res.choices[1]
 
     if choices.finish_reason == "tool_calls" and choices.message.tool_calls then
         for _, tool in ipairs(choices.message.tool_calls) do
-            tools["write_file"]("tool_calls.txt", cjson.encode(res))
+            tools:write_file("tool_calls.txt", cjson.encode(tool))
             local toolMsg = {
                 role = "assistant",
                 content = choices.message.content or "",
@@ -63,14 +61,13 @@ local function handle_response_callback(res, err)
             }
             tools:append_message(toolMsg)
             tool["function"].arguments = cjson.decode(tool["function"].arguments)
-
             tools:call(tool["function"], tool.id)
         end
         return
     end
 
     if choices.finish_reason == "stop" then
-	    tools["write_file"]("stop_calls.txt", cjson.encode(res))
+	    tools:write_file("stop_calls.txt", cjson.encode(res))
 	    tools:append_message(choices.message)
 	    return
     end

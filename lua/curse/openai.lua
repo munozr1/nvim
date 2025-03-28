@@ -1,20 +1,22 @@
 local toolsDesc = require "curse.toolsDesc"
+local tools = require "curse.tools"
 local cjson = require "cjson"
+local env_str, _ = tools:read_file(".env", true)
+local env_vars = cjson.decode(env_str)
 local deepseek_base_url = "https://api.deepseek.com"
-local deepseek_api_key ="sk-13212ca51d0641a3b7acb7d78aa4b890"
+local deepseek_api_key = env_vars["deepseek_key"]
 local sysprompt = require "curse.sysPrompt"
 local uv = vim.uv
-local tools = require "curse.tools"
 
 local M = {}
 
 function M.completion(query, callback)
     --fetch chat history
-    local chat_history_str = tools["read_file"]("messages.txt", true)
+    local chat_history_str = tools:read_file("messages.txt", true)
     local chat_history_json = cjson.decode(chat_history_str)
     local new_message = {role = "user", content = query}
     table.insert(chat_history_json, new_message)
-    tools["write_file"]("messages.txt", cjson.encode(chat_history_json))
+    tools:write_file("messages.txt", cjson.encode(chat_history_json))
     table.insert(chat_history_json, 1, {role = "system", content = sysprompt})
 
     local body = {
@@ -89,7 +91,7 @@ end
 
 function M.send_history(callback)
     --fetch chat history
-    local chat_history_str = tools["read_file"]("messages.txt", true)
+    local chat_history_str = tools:read_file("messages.txt", true)
     local chat_history_json = cjson.decode(chat_history_str)
     table.insert(chat_history_json, 1, {role = "system", content = sysprompt})
 
