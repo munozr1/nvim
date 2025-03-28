@@ -55,10 +55,16 @@ local function handle_response_callback(res, err)
 
     if choices.finish_reason == "tool_calls" and choices.message.tool_calls then
         for _, tool in ipairs(choices.message.tool_calls) do
-	    tools["write_file"]("tool_calls.txt", cjson.encode(res))
-	    tool["function"].arguments = cjson.decode(tool["function"].arguments)
-	    tools:append_message(choices.message)
-            tools:call(tool["function"])
+            tools["write_file"]("tool_calls.txt", cjson.encode(res))
+            local toolMsg = {
+                role = "assistant",
+                content = choices.message.content or "",
+                tool_calls = choices.message.tool_calls
+            }
+            tools:append_message(toolMsg)
+            tool["function"].arguments = cjson.decode(tool["function"].arguments)
+
+            tools:call(tool["function"], tool.id)
         end
         return
     end

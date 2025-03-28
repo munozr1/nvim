@@ -1,7 +1,7 @@
 local cjson = require "cjson"
 local M = {}
 
-function M:call(t)
+function M:call(t, id)
 	local tool = t.name
 	local params = t.arguments --cjson.decode(t.arguments)
 	if self[tool] == nil then
@@ -21,8 +21,9 @@ function M:call(t)
 	local msg = {
 		role = "tool",
 		name = tool,
-		arguments = params,
-		content = res
+		tool_call_id = id,
+		content = res,
+		arguments = cjson.encode(params)
 	}
 	self:append_message(msg)
 
