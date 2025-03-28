@@ -1,0 +1,1 @@
+[{"content": "I need you to add a shortcut in my init.lua to source the current file im in", "role":"user"},{"content":"run this tool with the give params: file_search {\"query\":\"init.lua\",\"explanation\":\"Locate the init.lua file to add the shortcut for sourcing the current file.\"}","role":"assistant"},{"content":"output of file_search: .\/init.lua","role":"user"}]
