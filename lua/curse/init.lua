@@ -1,38 +1,44 @@
+local pickers = require "telescope.pickers"
+local finders = require "telescope.finders"
+--local builtin = require "telescope.builtin"
+local conf = require("telescope.config").values
+local actions = require "telescope.actions"
+local action_state = require "telescope.actions.state"
+
 local cjson = require "cjson"
 local tools = require "curse.tools"
 local M = {}
+local contextfiles = {}
+
+local _addfile= function(opts)
+  opts = opts or {}
+  pickers.new(opts, {
+    prompt_title = "Add Files",
+    finder = finders.new_oneshot_job({ "find", "." }, opts ),
+    sorter = conf.generic_sorter(opts),
+    attach_mappings = function(prompt_bufnr, _)
+      actions.select_default:replace(function()
+        actions.close(prompt_bufnr)
+        local selection = action_state.get_selected_entry()
+        if selection then
+          local file_path = selection[1]
+          if file_path then
+		  table.insert(contextfiles, file_path)
+          else
+		  tools:write_file("err.txt", "Error: Selected entry has no path.")
+          end
+          else
+		  tools:write_file("err.txt", "Error: No file selected.")
+        end
+      end)
+      return true
+    end,
+  }):find()
+end
+
 
 function M.addContext()
-	local width = 40
-	local height = 10
-
-	local opts = {
-		relative = 'editor',
-		width = width,
-		height = height,
-		row = (vim.o.lines - height) /2,
-		col = (vim.o.columns - width) /2,
-		style = 'minimal',
-		border = 'rounded',
-	}
-
-	local buf = vim.api.nvim_create_buf(false, true)
-	vim.api.nvim_buf_set_option(buf, 'bufhidden', 'wipe')
-
-
-	local win = vim.api.nvim_open_win(buf, true, opts)
-
-	vim.api.nvim_buf_set_lines(buf, 0, -1, false, {
-		"line 1",
-		"line 2",
-		"line 3",
-		"line 4",
-	})
-
-
-	vim.api.nvim_buf_set_keymap(buf, 'n', 'q', ':close<CR>', {noremap = true, silent=true})
-
-	return buf, win
+	_addfile()
 end
 
 local function handle_response_callback(res, err)
@@ -79,7 +85,8 @@ end
 
 function M.query()
 	local openai = require "curse.openai"
-	openai.send_history(handle_response_callback)
+	--openai.send_history(handle_response_callback)
+	openai.completion("summarize this file", handle_response_callback, contextfiles)
 
 end
 

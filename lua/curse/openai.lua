@@ -10,10 +10,15 @@ local uv = vim.uv
 
 local M = {}
 
-function M.completion(query, callback)
+function M.completion(query, callback, ctx)
     --fetch chat history
     local chat_history_str = tools:read_file("messages.txt", true)
     local chat_history_json = cjson.decode(chat_history_str)
+    local contextfiles = ""
+    for _, val in ipairs(ctx) do
+    	local data = tools:read_file(val, true)
+	contextfiles = "filename: "..val.."\n"..contextfiles..data.."\n"
+    end
     local new_message = {role = "user", content = query}
     table.insert(chat_history_json, new_message)
     tools:write_file("messages.txt", cjson.encode(chat_history_json))

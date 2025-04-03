@@ -35,6 +35,9 @@ require('packer').startup(function(use)
 			'saadparwaiz1/cmp_luasnip',  -- Snippet completion source
 		}
 	}
+	use {'akinsho/git-conflict.nvim', tag = "*", config = function()
+	  require('git-conflict').setup()
+	end}
 
 
 	--vim.cmd('colorscheme nightfox')
@@ -51,6 +54,7 @@ require('packer').startup(function(use)
 
 	local curse = require("curse")
 	vim.api.nvim_create_user_command('CurseQuery',curse.query, {})
+	vim.api.nvim_create_user_command('AddContext',curse.addContext, {})
 	local builtin = require('telescope.builtin')
 	require('harpoon').setup({
 		tabline = true,
@@ -66,7 +70,10 @@ require('packer').startup(function(use)
 	vim.api.nvim_set_keymap('n', '<Leader>k', '<C-w>l', { noremap = true, silent = true })
 	vim.api.nvim_set_keymap('n', '<S-h>', ':vertical resize +2<CR>', { noremap = false, silent = true })
 	vim.api.nvim_set_keymap('n', '<S-l>', ':vertical resize -2<CR>', { noremap = false, silent = true })
-
+	vim.api.nvim_create_user_command('ChatbotOpen', function() require('ai').open() end, {})
+	vim.api.nvim_create_user_command('ChatbotClose', function() require('ai').close() end, {})
+	vim.keymap.set('n', '<leader>ao', function() require('ai').open() end, {})
+	vim.keymap.set('n', '<leader>ac', function() require('ai').close() end, {})
 	function Nav1()
 		hpui.nav_file(1)
 	end
@@ -86,7 +93,6 @@ require('packer').startup(function(use)
 	vim.keymap.set('n', '<leader>3', Nav3, {})
 	vim.keymap.set('n', '<leader>hn', hpui.nav_next, {})
 	vim.keymap.set('n', '<leader>hp', hpui.nav_prev, {})
-
 
 	local cmp = require('cmp')
 
@@ -167,6 +173,8 @@ require('packer').startup(function(use)
 		on_attach = on_attach,
 		capabilities = capabilities
 	}
+	
+	
 
 
 end)
